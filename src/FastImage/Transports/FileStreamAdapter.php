@@ -1,7 +1,5 @@
 <?php namespace FastImage\Transports;
 
-use InvalidArgumentException;
-
 /**
  * Class FileStreamAdapter
  *
@@ -67,7 +65,7 @@ class FileStreamAdapter implements TransportInterface {
     public function read($characters) {
 
         if (!is_numeric($characters)) {
-            throw new InvalidArgumentException('"Read" expects a number');
+            throw new \InvalidArgumentException('"Read" expects a number');
         }
 
         $n = $characters;
