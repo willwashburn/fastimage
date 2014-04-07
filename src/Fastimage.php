@@ -1,5 +1,7 @@
 <?php
 
+use FastImage\Transports\FileStreamAdapter;
+
 /**
  * FastImage - Because sometimes you just want the size!
  * Based on the Ruby Implementation by Steven Sykes (https://github.com/sdsykes/fastimage)
@@ -8,41 +10,60 @@
  * Tom Moor, http://tommoor.com
  *
  * MIT Licensed
- * @version 0.1
+ * @version 0.2
  */
-
 class FastImage
 {
-	private $strpos = 0;
-	private $str;
-	private $uri;
-	private $type;
-	private $handle;
-	
-	public function __construct($uri = null)
+    /**
+     * @var FastImage\Transports\TransportInterface
+     */
+    protected $transport;
+    /**
+     * @var string - The uri of the image we are loading
+     */
+    private $uri;
+    /**
+     * @var string - The type of image we've decided it is
+     */
+    private $type;
+
+    /**
+     * Construct
+     *
+     * @param null $uri
+     * @param null $transport
+     */
+    public function __construct($uri = null, $transport = null)
+    {
+        $this->transport = is_null($transport) ? new FileStreamAdapter : $transport;
+
+        if ($uri) {
+            $this->transport->open($uri);
+        }
+    }
+
+    /**
+     * Load a new image
+     *
+     * @param $uri
+     */
+    public function load($uri)
 	{
-		if ($uri) $this->load($uri);
+        $this->transport->close();
+
+        $this->uri = $uri;
+		$this->transport->open($uri);
 	}
 
-
-	public function load($uri)
+    /**
+     * Gets the size of the image in the uri
+     *
+     * @return array|bool
+     */
+    public function getSize()
 	{
-		if ($this->handle) $this->close();
-		
-		$this->uri = $uri;
-		$this->handle = fopen($uri, 'r');
-	}
+        $this->transport->resetReadPointer();
 
-
-	public function close()
-	{
-		if ($this->handle) fclose($this->handle);
-	}
-
-
-	public function getSize()
-	{
-		$this->strpos = 0;
 		if ($this->getType())
 		{
 			return array_values($this->parseSize());
@@ -51,11 +72,15 @@ class FastImage
 		return false;
 	}
 
-
-	public function getType()
+    /**
+     * Reads and returns the type of the image
+     *
+     * @return bool|string
+     */
+    public function getType()
 	{
-		$this->strpos = 0;
-		
+        $this->transport->resetReadPointer();
+
 		if (!$this->type)
 		{
 			switch ($this->getChars(2))
@@ -76,11 +101,13 @@ class FastImage
 		return $this->type;
 	}
 
-
-	private function parseSize()
+    /**
+     * @return array|bool|null
+     */
+    private function parseSize()
 	{	
-		$this->strpos = 0;
-		
+		$this->transport->resetReadPointer();
+
 		switch ($this->type)
 		{
 			case 'png':
@@ -96,24 +123,30 @@ class FastImage
 		return null;
 	}
 
-
-	private function parseSizeForPNG()
+    /**
+     * @return array
+     */
+    private function parseSizeForPNG()
 	{
 		$chars = $this->getChars(25);
 
 		return unpack("N*", substr($chars, 16, 8));
 	}
 
-
-	private function parseSizeForGIF()
+    /**
+     * @return array
+     */
+    private function parseSizeForGIF()
 	{
 		$chars = $this->getChars(11);
 
 		return unpack("S*", substr($chars, 6, 4));
 	}
 
-
-	private function parseSizeForBMP()
+    /**
+     * @return array
+     */
+    private function parseSizeForBMP()
 	{
 		$chars = $this->getChars(29);
 	 	$chars = substr($chars, 14, 14);
@@ -122,11 +155,12 @@ class FastImage
 		return (reset($type) == 40) ? unpack('L*', substr($chars, 4)) : unpack('L*', substr($chars, 4, 8));
 	}
 
-
-	private function parseSizeForJPEG()
+    /**
+     * @return array|bool
+     */
+    private function parseSizeForJPEG()
 	{
 		$state = null;
-		$i = 0;
 
 		while (true)
 		{
@@ -180,43 +214,24 @@ class FastImage
 					return array($this->readInt(substr($c, 5, 2)), $this->readInt(substr($c, 3, 2)));
 			}
 		}
+
+        return false;
 	}
 
-
-	private function getChars($n)
+    /**
+     * @param $n
+     *
+     * @return bool|string
+     */
+    private function getChars($n)
 	{
-		$response = null;
-		
-		// do we need more data?		
-		if ($this->strpos + $n -1 >= strlen($this->str))
-		{
-			$end = ($this->strpos + $n);
-
-			while (strlen($this->str) < $end && $response !== false)
-			{
-				// read more from the file handle
-				$need = $end - ftell($this->handle);
-
-				if ($response = fread($this->handle, $need))
-				{
-					$this->str .= $response;
-				}
-				else
-				{
-					return false;
-				}
-			}	
-		}
-		
-		$result = substr($this->str, $this->strpos, $n);
-		$this->strpos += $n;
-		
-		// we are dealing with bytes here, so force the encoding
-		return mb_convert_encoding($result, "8BIT");
+        return $this->transport->read($n);
 	}
 
-
-	private function getByte()
+    /**
+     * @return mixed
+     */
+    private function getByte()
 	{
 		$c = $this->getChars(1);
 		$b = unpack("C", $c);
@@ -224,17 +239,23 @@ class FastImage
 		return reset($b);
 	}
 
-
-	private function readInt($str)
+    /**
+     * @param $str
+     *
+     * @return int
+     */
+    private function readInt($str)
 	{
 		$size = unpack("C*", $str);
 		
 	    	return ($size[1] << 8) + $size[2];
 	}
 
-
-	public function __destruct()
+    /**
+     * Closes the connection
+     */
+    public function __destruct()
 	{
-		$this->close();
+		$this->transport->close();
 	}
 }
