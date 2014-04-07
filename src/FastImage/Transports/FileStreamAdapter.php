@@ -3,6 +3,8 @@
 /**
  * Class FileStreamAdapter
  *
+ * Untested port, but should work like the original
+ *
  * @package FastImage\Transports
  */
 class FileStreamAdapter implements TransportInterface {
