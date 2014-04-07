@@ -14,13 +14,14 @@ interface TransportInterface {
      * Opens the connection to the file
      *
      * @param $url
+     * @return $this
      */
     public function open($url);
 
     /**
      * Closes the connection to the file
      *
-     * @return mixed
+     * @return $this
      */
     public function close();
 
@@ -35,7 +36,7 @@ interface TransportInterface {
     /**
      * Resets the pointer where we are reading in the file
      *
-     * @return mixed
+     * @return $this
      */
     public function resetReadPointer();
 
