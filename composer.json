@@ -1,0 +1,24 @@
+{
+    "name": "willwashburn/FastImage",
+    "description": "A port of Tom Moor's FastImage using Curl",
+    "keywords": ["FastImage", "images"],
+    "github": "https://github.com/willwashburn/fastimage",
+    "authors": [
+        {
+            "name": "Tom Moor",
+            "homepage": "http://tommoor.com",
+        },
+        {
+            "name": "Will Washburn",
+            "email": "will@willigant.com",
+            "homepage": "http://willwashburn.com"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "autoload": {
+        "classmap": ["src"]
+    }
+}
