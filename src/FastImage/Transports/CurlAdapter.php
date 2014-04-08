@@ -37,6 +37,11 @@ class CurlAdapter implements TransportInterface {
     protected $data;
 
     /**
+     * @var int
+     */
+    protected $timeout = 10;
+
+    /**
      * Opens the connection to the file
      *
      * @param $url
@@ -106,4 +111,18 @@ class CurlAdapter implements TransportInterface {
     public function resetReadPointer()
     {
         $this->strpos = 0;
-    }}
+    }
+
+    /**
+     * @param $seconds
+     *
+     * @return $this
+     */
+    public function setTimeout($seconds)
+    {
+        $this->timeout = floatval($seconds);
+
+        return $this;
+    }
+
+}

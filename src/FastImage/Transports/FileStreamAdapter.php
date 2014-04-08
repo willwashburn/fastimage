@@ -27,6 +27,11 @@ class FileStreamAdapter implements TransportInterface {
     protected $str = '';
 
     /**
+     * @var int
+     */
+    protected $timeout = 10;
+
+    /**
      * Original open from Tom Moor's class
      * @param $uri
      *
@@ -111,5 +116,17 @@ class FileStreamAdapter implements TransportInterface {
      */
     public function resetReadPointer() {
         $this->strpos = 0;
+    }
+
+    /**
+     * @param $seconds
+     *
+     * @return $this
+     */
+    public function setTimeout($seconds)
+    {
+        $this->timeout = floatval($seconds);
+
+        return $this;
     }
 }

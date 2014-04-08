@@ -10,6 +10,16 @@
  */
 interface TransportInterface {
 
+
+    /**
+     * Set the timeout for the request
+     *
+     * @param $seconds
+     *
+     * @return mixed
+     */
+    public function setTimeOut($seconds);
+
     /**
      * Opens the connection to the file
      *
