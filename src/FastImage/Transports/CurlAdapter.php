@@ -59,10 +59,12 @@ class CurlAdapter implements TransportInterface {
         $this->handle = curl_init($url);
         curl_setopt($this->handle, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($this->handle, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($this->handle, CURLOPT_CONNECTTIMEOUT, $this->timeout);
+        curl_setopt($this->handle, CURLOPT_TIMEOUT, $this->timeout);
         $data = curl_exec($this->handle);
 
         if (curl_errno($this->handle)) {
-            throw new Exception(curl_error($this->handle),curl_errno($this->handle));
+            throw new Exception(curl_error($this->handle), curl_errno($this->handle));
         }
 
         $this->data = $data;

@@ -33,15 +33,33 @@ class FileStreamAdapter implements TransportInterface {
 
     /**
      * Original open from Tom Moor's class
+     *
      * @param $uri
+     *
+     * @throws Exception
      *
      * @return $this
      */
-    public function open($uri) {
+    public function open($uri)
+    {
 
         $this->close();
 
-        $this->handle =  fopen($uri,'r');
+        echo ini_get('default_socket_timeout');
+
+        $context = stream_context_create(
+            array(
+                 'http' => array(
+                     'timeout' => floatval($this->timeout),
+                 )
+            )
+        );
+
+        $this->handle = fopen($uri, 'r', false, $context);
+
+        if (!$this->handle) {
+            throw new Exception('The request timed out');
+        }
 
         return $this;
     }
@@ -54,7 +72,7 @@ class FileStreamAdapter implements TransportInterface {
     public function close() {
 
         if ($this->handle) {
-          fclose($this->handle);
+            fclose($this->handle);
         }
 
         return $this;
