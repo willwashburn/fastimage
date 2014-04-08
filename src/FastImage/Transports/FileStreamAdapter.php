@@ -45,8 +45,6 @@ class FileStreamAdapter implements TransportInterface {
 
         $this->close();
 
-        echo ini_get('default_socket_timeout');
-
         $context = stream_context_create(
             array(
                  'http' => array(
