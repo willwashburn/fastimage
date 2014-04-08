@@ -102,6 +102,7 @@ class CurlAdapter implements TransportInterface {
      *
      * @param $characters
      *
+     * @throws Exception
      * @throws \InvalidArgumentException
      * @return mixed
      */
@@ -112,6 +113,15 @@ class CurlAdapter implements TransportInterface {
         }
 
         $response = null;
+
+        if ($this->strpos > strlen($this->data) ){
+
+            throw new Exception(
+                'Not enough of the file was curled.' .
+                'Try increasing the range in the curl request'
+            );
+
+        }
 
         $result = substr($this->data, $this->strpos, $characters);
         $this->strpos += $characters;
