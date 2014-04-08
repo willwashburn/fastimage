@@ -42,6 +42,20 @@ class CurlAdapter implements TransportInterface {
     protected $timeout = 10;
 
     /**
+     * How much of the image to curl
+     * @var int
+     */
+    protected $range = 32768;
+
+    /**
+     * @param int $range
+     */
+    public function __construct($range = null)
+    {
+        $this->range = is_null($range) ? $this->range : $range;
+    }
+
+    /**
      * Opens the connection to the file
      *
      * @param $url
@@ -53,7 +67,7 @@ class CurlAdapter implements TransportInterface {
     public function open($url)
     {
         $headers = array(
-            "Range: bytes=0-32768"
+            "Range: bytes=0-$this->range"
         );
 
         $this->handle = curl_init($url);
