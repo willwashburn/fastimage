@@ -68,6 +68,9 @@ class FastImage
 					return $this->type = 'jpeg';
 				case chr(0x89).'P':
 					return $this->type = 'png';
+                case "II":
+                case "MM":
+                    return $this->type = 'tiff';
 				default:
 					return false;
 			}
@@ -90,7 +93,9 @@ class FastImage
 			case 'bmp':
 				return $this->parseSizeForBMP();
 			case 'jpeg':
-				return $this->parseSizeForJPEG();	    
+				return $this->parseSizeForJPEG();
+            case 'tiff':
+                return $this->parseSizeForTiff();
 		}
 		
 		return null;
@@ -181,6 +186,63 @@ class FastImage
 			}
 		}
 	}
+
+    private function parseSizeForTiff()
+    {
+        $byte_order = $this->getChars(2);
+
+        switch ( $byte_order ) {
+            case 'II':
+                $short = 'v';
+                $long  = 'V';
+                break;
+            case 'MM':
+                $short = 'n';
+                $long  = 'N';
+                break;
+            default:
+                return false;
+                break;
+        }
+
+        $this->getChars(2);
+
+        $offset = current(unpack($long,$this->getChars(4)));
+
+        $this->getChars($offset-8);
+
+        $tag_count = current(unpack($short,$this->getChars(2)));
+
+        for($i = $tag_count; $i > 0; $i--) {
+
+            $type = current(unpack($short,$this->getChars(2)));
+            $this->getChars(6);
+            $data = current(unpack($short,$this->getChars(2)));
+
+            switch ($type) {
+                case 0x0100:
+                    $width = $data;
+                    break;
+                case 0x0101:
+                    $height = $data;
+                    break;
+                case 0x0112:
+                    $orientation = $data;
+                    break;
+            }
+
+            if ( isset($width) && isset($height) && isset($orientation) ) {
+
+                if($orientation >= 5) {
+                    return [$height,$width];
+                }
+
+                return [$width,$height];
+            }
+
+            $this->getChars(2);
+        }
+    }
 
 
 	private function getChars($n)
